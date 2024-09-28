@@ -81,7 +81,7 @@ def elastic_search(query, vector, index_name = "math_problems", top_k=10):
             }
         }
     }
-    print("Search Query:", search_query)
+    #print("Search Query:", search_query)
     es = Elasticsearch('http://localhost:9200')
     response = es.search(index=index_name, body=search_query)
     return response['hits']['hits']
@@ -89,38 +89,38 @@ def elastic_search(query, vector, index_name = "math_problems", top_k=10):
 # Define the prompt to send to LLM
 def build_prompt(query, search_results):
     prompt_template = """
-        You're a math teacher that provides support to students. 
-        Compare the message you get from a student with the SOLUTION and ANSWER from the database.
+        You're a math teacher that provides support to students.
+        Compare the question provided with the SOLUTION and ANSWER from the database.
         If the student's answer is wrong, explain the SOLUTION from the database.
         Explain how the SOLUTION is different from the answer provided by the student.
+        Give your answer in a markdown format if using formulae.
 
-        ANSWER: {answer}
+        QUESTION: {question}
 
-        CONTEXT: 
+        STUDENT'S ANSWER: {answer}
+
+        CONTEXT:
         {context}
         """.strip()
 
-    # Handling cases when no answer is available
-    if search_results:
-        first_answer = search_results[0].get('answer', 'No answer available')
-        context = "\n\n".join(
-            [
-                f"section: {doc.get('section', 'N/A')}\nquestion: {doc.get('question', 'N/A')}\nanswer: {doc.get('answer', 'N/A')}"
-                for doc in search_results
-            ]
-        )
-    else:
-        first_answer = 'No answer available'
-        context = 'No context available'
+    # Format the context based on search results
+    context = "\n\n".join(
+        [
+            f"section: {doc['section']}\nquestion: {doc['question']}\nanswer: {doc['answer']}"
+            for doc in search_results
+        ]
+    )
 
-    return prompt_template.format(answer=first_answer, context=context).strip()
+    # Format the prompt with the query details
+    return prompt_template.format(question=query['question'], answer=query['answer'], context=context).strip()
 
-def llm(prompt):
+
+def llm(prompt, llmmodel="qwen2-math-7b-instruct"):
     # Log the start time
     start_time = time.time()
 
     response = ollama_client.chat.completions.create(
-        model="qwen2-math-7b-instruct",
+        model=llmmodel,
         messages=[{"role": "user", "content": prompt}]
     )
     answer = response.choices[0].message.content
@@ -130,16 +130,24 @@ def llm(prompt):
     print("Response time: {response_time}")
     return answer
 
-def rag(query):
-    vector = model.encode(query)
-    search_results = elastic_search(query, vector)
+def rag(query, llmmodel="qwen2-math-7b-instruct"):
+    q = query['question']
+    print("q is: ", q)
+    vector = model.encode(q)
+    search_results = elastic_search(q, vector)
     prompt = build_prompt(query, search_results)
-    answer = llm(prompt)
-    return answer
+    response = llm(prompt, llmmodel)
+    query["analysis"] = response
+    return query
 
 def main():
-    query = "2+2=4"
+    query = {
+        "question": "A taxi ride costs $\$1.50$ plus $\$0.25$ per mile traveled.  How much, in dollars, does a 5-mile taxi ride cost?",
+        "answer": "The answer is 2.75 because 0.25*5 + 1.5.",
+        "analysis": ""
+    }
+
     print(rag(query))
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

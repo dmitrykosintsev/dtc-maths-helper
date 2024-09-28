@@ -42,6 +42,7 @@ def main():
     es.indices.create(index=index_name, body={
         "mappings": {
             "properties": {
+                "question_id": {"type": "integer" },
                 "problem": {"type": "text"},
                 "level": {"type": "keyword"},
                 "type": {"type": "keyword"},
