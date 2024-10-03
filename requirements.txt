@@ -1,0 +1,7 @@
+psycopg2
+streamlit
+sentence_transformers==2.7.0
+openai
+python-dotenv
+elasticsearch
+pandas

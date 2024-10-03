@@ -16,7 +16,7 @@ services:
     image: ollama/ollama
     container_name: ollama
     volumes:
-      - /home/dmitry/.ollama/:/root/.ollama/
+      - ${OLLAMA_MODELS}:/root/.ollama/
     ports:
       - "11434:11434"
     deploy:
@@ -26,3 +26,46 @@ services:
             - driver: nvidia
               count: all
               capabilities: [ gpu ]
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  streamlit:
+    build: .
+    container_name: streamlit
+    command: ["streamlit", "run", "app.py"]
+    environment:
+      - ELASTIC_URL=http://localhost:${ELASTIC_PORT:-9200}
+      - OLLAMA_URL=http://ollama:${OLLAMA_PORT:-11434}/v1/
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - MODEL_NAME=${MODEL_NAME}
+      - INDEX_NAME=${INDEX_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    volumes:
+      - ./:/app
+    depends_on:
+      - elasticsearch
+      - ollama
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres_data  # Specify the path on the host

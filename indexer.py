@@ -26,7 +26,7 @@ def clean_data(df):
 def main():
     # Load the CSV file into a DataFrame in chunks
     chunk_size = 1000  # Adjust the chunk size as needed
-    chunks = pd.read_csv('./data/Qsa_train.csv', chunksize=chunk_size)
+    chunks = pd.read_csv('../data/Qsa_train.csv', chunksize=chunk_size)
 
     # Initialize Elasticsearch client
     es = Elasticsearch('http://localhost:9200')

@@ -4,7 +4,11 @@ import random
 from rag import rag
 
 # Initialize Elasticsearch client
-es = Elasticsearch("http://localhost:9200")  # Adjust this URL to your Elasticsearch setup
+es = Elasticsearch("http://elasticsearch:9200")  # Adjust this URL to your Elasticsearch setup
+
+# Function to print logs
+def print_log(message):
+    print(message, flush=True)
 
 # Function to retrieve a random question from Elasticsearch
 def get_random_question():
@@ -40,16 +44,17 @@ def get_random_question():
 
 # Streamlit app for the math support bot
 def main():
+    print_log("Starting the Math chatbot")
     st.title("Math Support Bot")
     st.text("This bot provides a random math problem \nand analyses student's solution for mistakes.")
+
+    if "question" not in st.session_state:
+        st.session_state.question = get_random_question()
 
     # Restart button to fetch a new question
     if st.button("Get another question"):
         del st.session_state.question
         del st.session_state.answer
-
-    if "question" not in st.session_state:
-        st.session_state.question = get_random_question()
 
     st.markdown(f"Question: {st.session_state.question}")
 
@@ -69,6 +74,19 @@ def main():
         # Display the response from LLM
         st.write("Response from the bot:")
         st.markdown(llm_response['analysis'])
+
+        # Ask for feedback from the user
+        st.write("Did this help you?")
+        col1, col2 = st.columns(2)
+
+        feedback = None
+        if col1.button("👍"):
+            feedback = "positive"
+        if col2.button("👎"):
+            feedback = "negative"
+
+        if feedback:
+            st.write(f"Thank you for your feedback: {feedback}")
 
 if __name__ == "__main__":
     main()
