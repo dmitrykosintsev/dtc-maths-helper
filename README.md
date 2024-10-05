@@ -9,21 +9,35 @@ Here are a few chatbots that work with maths:
 * DeepAI's Math AI: the closest solution to allow for conversations. However, it provides solutions to questions by default.
 
 ## Tech stack
-**Search:** Elasticsearch 8.4.3
+**Search:** Elasticsearch 8.4.3 with Hybrid search
 
 **Code**: Python 3.12
 
 **UI**: Streamlit:latest
 
+**Knowledgebase:** Math QSA dataset (https://www.kaggle.com/datasets/awsaf49/math-qsa-dataset)
+
 **LLMs:** deepseek-math-7b-rl, Qwen2-Math-7B-Instruct, MathCoder-CL-7B, chatGPT-4o-mini
 
 **Database:** Postgres
 
-**Container**: docker-compose
+**Data ingestion:** Python script (see indexer.py)
 
-**Visualisation**: Grafana
+**Container:** docker-compose
 
-## Installation
+**Monitoring:** Grafana
+
+## RAG flow
+
+
+## Before you start
+This manual assumes that you have Python installed either as part of your system or in a virtual environment. Setting virtual environment is not part of this manual. Kindly use Google or ChatGPT if you need help with this.
+
+Based on my setup, installation might require **up to 25 GB on your HDD/SDD**.
+
+The installation script is simple and is not guaranteed to run properly if the first run was interrupted. In this case, follow the steps for manual setup from the moment of interruption.
+
+## Installing with a script
 
 1. Clone the repository
 ~~~
@@ -33,15 +47,15 @@ git clone https://github.com/dmitrykosintsev/dtc-maths-helper
 3. Follow the steps specific for your machine
 
 ### Linux
-1. Give executable permissions to the install.sh script. This script runs all steps for you:
+1. Give executable permissions to the install.sh script. This script runs all steps for you. Run the command from the directory where the script is located:
 ~~~
-chmod +x /path/to/yourscript.sh
+chmod +x install.sh
 ~~~
 2. Run the script and relax:
 ~~~
 ./install.sh
 ~~~
-3. After the script finishes with a success message, run 
+3. After the script finishes with a success message, go to the section Running application 
 
 4. If you do not wish to run unknown scripts from unknown sources (which means you are awesome!), you can simply go through the script step-by-step
 
@@ -51,3 +65,84 @@ If you are not familiar with WSL, use Codespaces and run the script as described
 
 ### Mac
 Not tested, but you should be able to run the commands used for Linux.
+
+## Installing manually
+1. Clone the repository
+~~~
+git clone https://github.com/dmitrykosintsev/dtc-maths-helper
+~~~
+2. Edit .env.template to include your OpenAI API Key (if you want to run the bot using ChatGPT). Rename the file to .env
+3. Create the following directories: ./data/postgres_data and ./.elasticsearch/data/
+4. Run docker-compose build
+5. Download models. You can get them all or pick one:
+* deepseek-math-7b-rl:
+    * https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/blob/main/model-00001-of-000002.safetensors
+    * https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/blob/main/model-00002-of-000002.safetensors
+* Qwen2-Math-7B-Instruct
+    * https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00001-of-00004.safetensors
+    * https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00002-of-00004.safetensors
+    * https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00003-of-00004.safetensors
+    * https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00004-of-00004.safetensors
+* MathCoder-CL-7B
+    * https://huggingface.co/MathLLMs/MathCoder-CL-7B/blob/main/model-00001-of-00002.safetensors
+    * https://huggingface.co/MathLLMs/MathCoder-CL-7B/blob/main/model-00002-of-00002.safetensors
+
+Download each model into a separate directory and create Modelfile in each directory.
+The content of Modelfile:
+~~~
+FROM /path/to/safetensors/directory
+~~~
+6. To import a model into Ollama, its files and Modelfile should be copied in OLLAMA_MODELS folder (set in .env file, default ./ollama/models/).
+~~~
+docker-compose up -d ollama
+~~~
+and
+~~~
+docker exec -it ollama bash
+~~~
+Then, run:
+~~~
+ollama create <modelname>
+~~~
+Without leaving bash terminal, you can check that the model are imported by using the following command:
+~~~
+ollama list
+~~~~
+Return to your standard terminal and run:
+~~~
+docker-compose up -d elasticsearch
+~~~
+to run elasticsearch. After, execute the indexer script to index the csv file with problems and solutions:
+~~~
+python3 indexer.py
+~~~
+
+## Running application
+1. Run docker-compose from the root folder of the project:
+~~~
+docker-compose up -d
+~~~
+2. Run streamlit app:
+~~~
+streamlit  run app.py
+~~~
+
+### Interface
+
+### Using NVidia GPUs:
+Uncomment the following lines in docker-compose.yaml if you have a dedicated NVidia GPU and want to use it for Ollama:
+~~~
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+~~~
+
+## Evaluations
+
+### Retrieval evaluation
+
+### RAG evaluation
