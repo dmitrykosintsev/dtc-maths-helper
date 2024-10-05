@@ -11,8 +11,9 @@ else
     exit 1
 fi
 
-# Create ./data/postgres_data
+# Creating necessary directories
 mkdir -p ./data/postgres_data
+mkdir -p ./.elasticsearch/data/
 
 # Step 2: Build Docker Compose images without starting them
 docker-compose -f docker-compose.yaml build
@@ -99,7 +100,17 @@ done
 echo "Displaying the list of imported models:"
 docker exec "$ollama_container" ollama list
 
-# Step 7: Bring down Docker Compose services
+# Step 7: Run 'indexer.py' to index data into Elasticsearch
+echo "Running the indexer script..."
+docker-compose exec -T elasticsearch python3 indexer.py
+if [ $? -ne 0 ]; then
+    echo "Failed to run indexer.py!"
+    exit 1
+else
+    echo "indexer.py executed successfully!"
+fi
+
+# Step 8: Bring down Docker Compose services
 docker-compose down
 if [ $? -ne 0 ]; then
     echo "Failed to bring down Docker Compose services!"
