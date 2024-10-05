@@ -1,14 +1,18 @@
 #!/bin/bash
 
 # This script is used to install Maths Helper bot. Each operation can be performed manually
-# Step 1: Rename .env.template to .env if it exists
+# Step 1: Preparing files
+# Rename .env.template to .env if it exists
 if [ -f ".env.template" ]; then
-    mv .env.template .env
+    cp .env.template .env
     echo ".env.template renamed to .env"
 else
     echo ".env.template does not exist!"
     exit 1
 fi
+
+# Create ./data/postgres_data
+mkdir -p ./data/postgres_data
 
 # Step 2: Build Docker Compose images without starting them
 docker-compose -f docker-compose.yaml build
