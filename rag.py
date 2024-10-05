@@ -82,7 +82,7 @@ def elastic_search(query, vector, index_name = "math_problems", top_k=10):
         }
     }
     #print("Search Query:", search_query)
-    es = Elasticsearch('http://localhost:9200')
+    es = Elasticsearch(os.getenv('ELASTIC_URL'))
     response = es.search(index=index_name, body=search_query)
     return response['hits']['hits']
 

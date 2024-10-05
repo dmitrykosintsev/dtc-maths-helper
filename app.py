@@ -1,10 +1,11 @@
 import streamlit as st
 from elasticsearch import Elasticsearch
 import random
+import os
 from rag import rag
 
 # Initialize Elasticsearch client
-es = Elasticsearch("http://elasticsearch:9200")  # Adjust this URL to your Elasticsearch setup
+es = Elasticsearch(os.getenv('ELASTIC_URL'))  # Adjust this URL to your Elasticsearch setup
 
 # Function to print logs
 def print_log(message):
