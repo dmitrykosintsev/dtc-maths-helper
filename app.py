@@ -2,7 +2,14 @@ import streamlit as st
 from elasticsearch import Elasticsearch
 import random
 import os
+import logging
 from rag import rag
+
+# Debugging logs
+logging.basicConfig(level=logging.INFO)
+logging.info(f"OLLAMA_URL: {os.getenv('OLLAMA_URL')}")
+logging.info(f"Current working directory: {os.getcwd()}")
+logging.info(f"Contents of current directory: {os.listdir()}")
 
 # Initialize Elasticsearch client
 es = Elasticsearch(os.getenv('ELASTIC_URL'))  # Adjust this URL to your Elasticsearch setup
@@ -50,6 +57,7 @@ def main():
     st.text("This bot provides a random math problem \nand analyses student's solution for mistakes.")
 
     if "question" not in st.session_state:
+        st.session_state.question = ""
         st.session_state.question = get_random_question()
 
     # Restart button to fetch a new question

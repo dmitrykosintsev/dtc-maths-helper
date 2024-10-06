@@ -1,6 +1,7 @@
 # This class implement RAG using the index from indexer and various LLMs
 import time
 import os
+import logging
 
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
@@ -10,9 +11,12 @@ from dotenv import load_dotenv
 
 # Load variables
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
+
+base_url = os.getenv('OLLAMA_URL', 'http://ollama:11434')
 
 ollama_client = OpenAI(
-    base_url='http://localhost:11434/v1',
+    base_url=f"{base_url}/api",
     api_key="ollama",
 )
 OpenAI.api_key = os.getenv('OPENAI_API_KEY')
@@ -119,16 +123,23 @@ def llm(prompt, llmmodel="qwen2-math-7b-instruct"):
     # Log the start time
     start_time = time.time()
 
-    response = ollama_client.chat.completions.create(
-        model=llmmodel,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    answer = response.choices[0].message.content
+    try:
+        logging.info(f"Sending request to Ollama. URL: {base_url}, Model: {llmmodel}")
+        response = ollama_client.chat.completions.create(
+            model=llmmodel,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        logging.info("Received response from Ollama")
+        answer = response.choices[0].message.content
 
-    end_time = time.time()
-    response_time = end_time - start_time
-    print("Response time: {response_time}")
-    return answer
+        end_time = time.time()
+        response_time = end_time - start_time
+        print("Response time: {response_time}")
+        return answer
+    except Exception as e:
+        logging.error(f"Error connecting to Ollama: {str(e)}")
+        logging.error(f"Request details - URL: {base_url}, Model: {llmmodel}, Prompt: {prompt}")
+        raise
 
 def rag(query, llmmodel="qwen2-math-7b-instruct"):
     q = query['question']
