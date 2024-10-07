@@ -57,13 +57,19 @@ def main():
     st.text("This bot provides a random math problem \nand analyses student's solution for mistakes.")
 
     if "question" not in st.session_state:
-        st.session_state.question = ""
         st.session_state.question = get_random_question()
+
+    if "answer" not in st.session_state:
+        st.session_state.answer = ""  # Initialize answer as an empty string
+
+    if "feedback" not in st.session_state:
+         st.session_state.feedback = None  # Initialize feedback as None
 
     # Restart button to fetch a new question
     if st.button("Get another question"):
-        del st.session_state.question
-        del st.session_state.answer
+        st.session_state.question = get_random_question()
+        st.session_state.answer = ""
+        st.session_state.feedback = None
 
     st.markdown(f"Question: {st.session_state.question}")
 
@@ -90,12 +96,13 @@ def main():
 
         feedback = None
         if col1.button("👍"):
-            feedback = "positive"
+            st.session_state.feedback = "positive"
         if col2.button("👎"):
-            feedback = "negative"
+            st.session_state.feedback = "negative"
 
-        if feedback:
-            st.write(f"Thank you for your feedback: {feedback}")
+    # Display feedback if it has been given
+    if st.session_state.feedback:
+        st.write(f"Thank you for your feedback: {st.session_state.feedback}")
 
 if __name__ == "__main__":
     main()

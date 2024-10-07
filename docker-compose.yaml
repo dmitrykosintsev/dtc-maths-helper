@@ -12,12 +12,10 @@ services:
     volumes:
       - ${ELASTIC_PATH}/:/usr/share/elasticsearch/data
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
+      test: ["CMD", "curl", "-f", "${ELASTIC_URL}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mathbot
 
   ollama:
     image: ollama/ollama
@@ -32,15 +30,13 @@ services:
           devices:
             - driver: nvidia
               count: all
-              capabilities: [ gpu ]
+              capabilities: [gpu]
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:11434 || exit 1" ]
+      test: ["CMD-SHELL", "curl -f ${OLLAMA_URL} || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
       start_period: 40s
-    networks:
-      - mathbot
 
   postgres:
     image: postgres:13
@@ -54,45 +50,36 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mathbot
 
-#  streamlit:
-#    build: .
-#    container_name: streamlit
-#    command: ["streamlit", "run", "app.py"]
-#    environment:
-#      - ${ELASTIC_URL}
-#      - OLLAMA_URL=http://ollama:11434
-#      - POSTGRES_HOST=postgres
-#      - POSTGRES_DB=${POSTGRES_DB}
-#      - POSTGRES_USER=${POSTGRES_USER}
-#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-#      - MODEL_NAME=${MODEL_NAME}
-#      - INDEX_NAME=${INDEX_NAME}
-#      - OPENAI_API_KEY=${OPENAI_API_KEY}
-#    ports:
-#      - "8501:8501"
-#    volumes:
-#      - ./:/app
-#    depends_on:
-#      elasticsearch:
-#        condition: service_healthy
-#      ollama:
-#        condition: service_started
-#      postgres:
-#        condition: service_started
-#
-#    networks:
-#      - mathbot
+  streamlit:
+    build: .
+    container_name: streamlit
+    command: ["streamlit", "run", "app.py"]
+    environment:
+      - ${ELASTIC_URL}
+      - OLLAMA_URL=http://ollama:11434
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - MODEL_NAME=${MODEL_NAME}
+      - INDEX_NAME=${INDEX_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./:/app
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      postgres:
+        condition: service_started
 
 volumes:
   postgres_data:
-
-networks:
-  mathbot:
-    driver: bridge

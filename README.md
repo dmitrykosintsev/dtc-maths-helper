@@ -55,7 +55,7 @@ chmod +x install.sh
 ~~~
 ./install.sh
 ~~~
-3. After the script finishes with a success message, go to the section Running application 
+3. After the script finishes with a success message, go to the section Running application
 
 4. If you do not wish to run unknown scripts from unknown sources (which means you are awesome!), you can simply go through the script step-by-step
 
@@ -122,10 +122,7 @@ python3 indexer.py
 ~~~
 docker-compose up -d
 ~~~
-2. Run streamlit app:
-~~~
-streamlit  run app.py
-~~~
+2. Look for the output from Streamlit to find the access link for the application.
 
 ### Interface
 

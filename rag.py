@@ -14,7 +14,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 base_url = os.getenv('OLLAMA_URL')
-ollama_url = f"{base_url}v1/"
+ollama_url = f"{base_url}/v1/"
 print(os.getenv('OLLAMA_URL'))
 ollama_client = OpenAI(
     #base_url=os.getenv('OLLAMA_URL'),
@@ -24,37 +24,6 @@ ollama_client = OpenAI(
 OpenAI.api_key = os.getenv('OPENAI_API_KEY')
 openai_client = OpenAI()
 model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
-
-
-# def elastic_search(query, vector):
-#     # Test text search alone
-#     text_search_query = {
-#         "query": {
-#             "match": {"text": query}
-#         }
-#     }
-#
-#     # Test vector search alone
-#     vector_search_query = {
-#         "query": {
-#             "script_score": {
-#                 "query": {"match_all": {}},
-#                 "script": {
-#                     "source": "cosineSimilarity(params.vector, 'vector_field') + 1.0",
-#                     "params": {"vector": vector}
-#                 }
-#             }
-#         }
-#     }
-#
-#     # Log the queries for debugging
-#     print(f"Text search query: {text_search_query}")
-#     print(f"Vector search query: {vector_search_query}")
-#
-#     # Run the combined query or either text/vector search individually
-#     es = Elasticsearch('http://localhost:9200')
-#     response = es.search(index="math_problems", body={"query": text_search_query})
-#     return response["hits"]["hits"]
 
 
 def elastic_search(query, vector, index_name = "math_problems", top_k=10):
