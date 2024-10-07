@@ -13,10 +13,12 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-base_url = os.getenv('OLLAMA_URL', 'http://ollama:11434')
-
+base_url = os.getenv('OLLAMA_URL')
+ollama_url = f"{base_url}v1/"
+print(os.getenv('OLLAMA_URL'))
 ollama_client = OpenAI(
-    base_url=f"{base_url}/api",
+    #base_url=os.getenv('OLLAMA_URL'),
+    base_url=ollama_url,
     api_key="ollama",
 )
 OpenAI.api_key = os.getenv('OPENAI_API_KEY')
@@ -97,7 +99,7 @@ def build_prompt(query, search_results):
         Compare the question provided with the SOLUTION and ANSWER from the database.
         If the student's answer is wrong, explain the SOLUTION from the database.
         Explain how the SOLUTION is different from the answer provided by the student.
-        Give your answer in a markdown format if using formulae.
+        Give your answer in a markdown format supported by Streamlit if using formulae.
 
         QUESTION: {question}
 
@@ -124,7 +126,7 @@ def llm(prompt, llmmodel="qwen2-math-7b-instruct"):
     start_time = time.time()
 
     try:
-        logging.info(f"Sending request to Ollama. URL: {base_url}, Model: {llmmodel}")
+        logging.info(f"Sending request to Ollama. URL: {ollama_url}, Model: {llmmodel}")
         response = ollama_client.chat.completions.create(
             model=llmmodel,
             messages=[{"role": "user", "content": prompt}]
@@ -138,7 +140,7 @@ def llm(prompt, llmmodel="qwen2-math-7b-instruct"):
         return answer
     except Exception as e:
         logging.error(f"Error connecting to Ollama: {str(e)}")
-        logging.error(f"Request details - URL: {base_url}, Model: {llmmodel}, Prompt: {prompt}")
+        logging.error(f"Request details - URL: {ollama_url}, Model: {llmmodel}, Prompt: {prompt}")
         raise
 
 def rag(query, llmmodel="qwen2-math-7b-instruct"):
@@ -160,5 +162,5 @@ def main():
 
     print(rag(query))
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

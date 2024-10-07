@@ -61,34 +61,34 @@ services:
     networks:
       - mathbot
 
-  streamlit:
-    build: .
-    container_name: streamlit
-    command: ["streamlit", "run", "app.py"]
-    environment:
-      - ${ELASTIC_URL}
-      - OLLAMA_URL=http://ollama:11434
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - MODEL_NAME=${MODEL_NAME}
-      - INDEX_NAME=${INDEX_NAME}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-    ports:
-      - "8501:8501"
-    volumes:
-      - ./:/app
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-      ollama:
-        condition: service_started
-      postgres:
-        condition: service_started
-
-    networks:
-      - mathbot
+#  streamlit:
+#    build: .
+#    container_name: streamlit
+#    command: ["streamlit", "run", "app.py"]
+#    environment:
+#      - ${ELASTIC_URL}
+#      - OLLAMA_URL=http://ollama:11434
+#      - POSTGRES_HOST=postgres
+#      - POSTGRES_DB=${POSTGRES_DB}
+#      - POSTGRES_USER=${POSTGRES_USER}
+#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#      - MODEL_NAME=${MODEL_NAME}
+#      - INDEX_NAME=${INDEX_NAME}
+#      - OPENAI_API_KEY=${OPENAI_API_KEY}
+#    ports:
+#      - "8501:8501"
+#    volumes:
+#      - ./:/app
+#    depends_on:
+#      elasticsearch:
+#        condition: service_healthy
+#      ollama:
+#        condition: service_started
+#      postgres:
+#        condition: service_started
+#
+#    networks:
+#      - mathbot
 
 volumes:
   postgres_data:
