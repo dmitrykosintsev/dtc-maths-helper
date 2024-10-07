@@ -2,8 +2,20 @@ import streamlit as st
 from elasticsearch import Elasticsearch
 import random
 import os
+import uuid
+import time
 import logging
+import psycopg2
+from psycopg2.extras import DictCursor
 from rag import rag
+
+from db import (
+    save_conversation,
+    save_feedback,
+    get_recent_conversations,
+    get_feedback_stats,
+    init_db
+)
 
 # Debugging logs
 logging.basicConfig(level=logging.INFO)
@@ -56,6 +68,13 @@ def main():
     st.title("Math Support Bot")
     st.text("This bot provides a random math problem \nand analyses student's solution for mistakes.")
 
+    # Session state initialization
+    if "conversation_id" not in st.session_state:
+        st.session_state.conversation_id = str(uuid.uuid4())
+        print_log(
+            f"New conversation started with ID: {st.session_state.conversation_id}"
+        )
+
     if "question" not in st.session_state:
         st.session_state.question = get_random_question()
 
@@ -76,19 +95,47 @@ def main():
     # Input field for student's answer
     answer = st.text_area("Your answer:", key="answer")
 
+    # Model selection
+    model_choice = st.selectbox(
+        "Select a model:",
+        ["qwen2-math-7b-instruct", "mathcoder-cl-7b", "deepseek-math-7b"],
+    )
+    print_log(f"User selected model: {model_choice}")
+
     # Send button to submit the answer
     if st.button("Send"):
         # Dummy context and response for now
         query = {
-            "question": st.session_state.question,
-            "answer": answer,
-            "analysis": ""
+            "question": "A taxi ride costs $\$1.50$ plus $\$0.25$ per mile traveled.  How much, in dollars, does a 5-mile taxi ride cost?",
+            "answer": "The answer is 2.75 because 0.25*5 + 1.5.",
+            "analysis": "",
+            "response_time": "",
+            "relevance": "",
+            "rel_explanation": "",
+            "model_used": ""
         }
-        llm_response = rag(query)
+        start_time = time.time()
+        llm_response = rag(query, model_choice)
+        end_time = time.time()
+        print_log(f"Answer received in {end_time - start_time:.2f} seconds")
 
         # Display the response from LLM
         st.write("Response from the bot:")
         st.markdown(llm_response['analysis'])
+
+        # Display monitoring information
+        st.write(f"Response time: {llm_response['response_time']:.2f} seconds")
+        st.write(f"Relevance: {llm_response['relevance']}")
+        st.write(f"Model used: {llm_response['model_used']}")
+
+        # Save conversation to database
+        print_log("Saving conversation to database")
+        save_conversation(
+            st.session_state.conversation_id, llm_response
+        )
+        print_log("Conversation saved successfully")
+        # Generate a new conversation ID for next question
+        st.session_state.conversation_id = str(uuid.uuid4())
 
         # Ask for feedback from the user
         st.write("Did this help you?")

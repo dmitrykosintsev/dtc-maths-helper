@@ -116,6 +116,10 @@ to run elasticsearch. After, execute the indexer script to index the csv file wi
 ~~~
 python3 indexer.py
 ~~~
+Run newdb.py to initialise the database:
+~~~
+python3 newdb.py
+~~~
 
 ## Running application
 1. Run docker-compose from the root folder of the project:
@@ -143,3 +147,33 @@ Uncomment the following lines in docker-compose.yaml if you have a dedicated NVi
 ### Retrieval evaluation
 
 ### RAG evaluation
+The following part of rag.py is responsible for LLM-as-a-judge evaluation:
+~~~
+# Prompt for LLM-as-a-judge evaluation
+def evaluation_function(feedback, question, student_answer):
+    eval_prompt_template = """
+        You're a math evaluation system.
+        Evaluate the RELEVANCE of the feedback provided by the teacher for the student's answer.
+        Here is the data for evaluation:
+            QUESTION: {question}
+            STUDENT'S ANSWER: {student_answer}
+            FEEDBACK: {feedback}
+
+        Please analyze the content and context of the generated answer in relation to the original
+        answer and provide your evaluation in parsable JSON without using code blocks:
+
+        {{
+          "Relevance": "NON_RELEVANT" | "PARTLY_RELEVANT" | "RELEVANT",
+          "Explanation": "[Provide a brief explanation for your evaluation]"
+        }}
+        """.strip()
+
+    prompt = eval_prompt_template.format(question=question, student_answer=student_answer, feedback=feedback)
+    evaluation, _ = llm(prompt, 'gpt-4o-mini')
+
+    try:
+        json_eval = json.loads(evaluation)
+        return json_eval['Relevance'], json_eval['Explanation']
+    except json.JSONDecodeError:
+        return "UNKNOWN", "Failed to parse evaluation"
+~~~

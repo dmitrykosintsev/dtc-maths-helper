@@ -1,13 +1,13 @@
 # This class implement RAG using the index from indexer and various LLMs
-import time
 import os
+import time
 import logging
+import json
 
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 from dotenv import load_dotenv
-
 
 # Load variables
 load_dotenv()
@@ -91,42 +91,89 @@ def build_prompt(query, search_results):
 
 
 def llm(prompt, llmmodel="qwen2-math-7b-instruct"):
-    # Log the start time
     start_time = time.time()
-
     try:
         logging.info(f"Sending request to Ollama. URL: {ollama_url}, Model: {llmmodel}")
-        response = ollama_client.chat.completions.create(
-            model=llmmodel,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        logging.info("Received response from Ollama")
-        answer = response.choices[0].message.content
+        if llmmodel == 'qwen2-math-7b-instruct' or llmmodel == 'mathcoder-cl-7b' or llmmodel == 'deepseek-math-7b':
+            response = ollama_client.chat.completions.create(
+                model=llmmodel,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            logging.info("Received response from Ollama")
+            answer = response.choices[0].message.content
+        elif llmmodel == 'gpt-4o-mini':
+                response = openai_client.chat.completions.create(
+                    model='gpt-4o-mini',
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                answer = response.choices[0].message.content
+        else:
+                raise ValueError(f"Unknown model choice: {llmmodel}")
 
         end_time = time.time()
         response_time = end_time - start_time
         print("Response time: {response_time}")
-        return answer
+        return answer, response_time
     except Exception as e:
         logging.error(f"Error connecting to Ollama: {str(e)}")
         logging.error(f"Request details - URL: {ollama_url}, Model: {llmmodel}, Prompt: {prompt}")
         raise
 
-def rag(query, llmmodel="qwen2-math-7b-instruct"):
+# Prompt for LLM-as-a-judge evaluation
+def evaluation_function(feedback, question, student_answer):
+    eval_prompt_template = """
+        You're a math evaluation system.
+        Evaluate the RELEVANCE of the feedback provided by the teacher for the student's answer.
+        Here is the data for evaluation:
+            QUESTION: {question}
+            STUDENT'S ANSWER: {student_answer}
+            FEEDBACK: {feedback}
+
+        Please analyze the content and context of the generated answer in relation to the original
+        answer and provide your evaluation in parsable JSON without using code blocks:
+
+        {{
+          "Relevance": "NON_RELEVANT" | "PARTLY_RELEVANT" | "RELEVANT",
+          "Explanation": "[Provide a brief explanation for your evaluation]"
+        }}
+        """.strip()
+
+    prompt = eval_prompt_template.format(question=question, student_answer=student_answer, feedback=feedback)
+    evaluation, _ = llm(prompt, 'gpt-4o-mini')
+
+    try:
+        json_eval = json.loads(evaluation)
+        return json_eval['Relevance'], json_eval['Explanation']
+    except json.JSONDecodeError:
+        return "UNKNOWN", "Failed to parse evaluation"
+
+def rag(query, llmmodel="qwen2-math-7b-instruct", eval_llm="gpt-4o-mini",):
     q = query['question']
     print("q is: ", q)
     vector = model.encode(q)
     search_results = elastic_search(q, vector)
     prompt = build_prompt(query, search_results)
-    response = llm(prompt, llmmodel)
+    response, response_time = llm(prompt, llmmodel)
+    query["response_time"] = response_time
+
+    # Evaluate the relevance of the response from LLM
+    relevance, explanation = evaluation_function(response, query['question'], query['answer'])
+
     query["analysis"] = response
+    query["relevance"] = relevance
+    query["rel_explanation"] = explanation
+    query["model_used"] = llmmodel
     return query
 
 def main():
     query = {
         "question": "A taxi ride costs $\$1.50$ plus $\$0.25$ per mile traveled.  How much, in dollars, does a 5-mile taxi ride cost?",
         "answer": "The answer is 2.75 because 0.25*5 + 1.5.",
-        "analysis": ""
+        "analysis": "",
+        "response_time": "",
+        "relevance": "",
+        "rel_explanation": "",
+        "model_used": ""
     }
 
     print(rag(query))

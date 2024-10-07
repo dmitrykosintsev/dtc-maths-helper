@@ -110,7 +110,17 @@ else
     echo "indexer.py executed successfully!"
 fi
 
-# Step 8: Bring down Docker Compose services
+# Step 8: Run newdb.py script
+echo "Running newdb.py..."
+python3 newdb.py
+if [ $? -ne 0 ]; then
+    echo "Failed to run newdb.py!"
+    exit 1
+else
+    echo "A new database was successfully created!"
+fi
+
+# Step 9: Bring down Docker Compose services
 docker-compose down
 if [ $? -ne 0 ]; then
     echo "Failed to bring down Docker Compose services!"
