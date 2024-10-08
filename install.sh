@@ -14,6 +14,7 @@ fi
 # Creating necessary directories
 mkdir -p ./data/postgres_data
 mkdir -p ./.elasticsearch/data/
+mkdir -p ./data/grafana_data
 
 # Step 2: Build Docker Compose images without starting them
 docker-compose -f docker-compose.yaml build

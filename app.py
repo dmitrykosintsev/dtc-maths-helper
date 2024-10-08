@@ -106,8 +106,8 @@ def main():
     if st.button("Send"):
         # Dummy context and response for now
         query = {
-            "question": "A taxi ride costs $\$1.50$ plus $\$0.25$ per mile traveled.  How much, in dollars, does a 5-mile taxi ride cost?",
-            "answer": "The answer is 2.75 because 0.25*5 + 1.5.",
+            "question": st.session_state.question,
+            "answer": answer,
             "analysis": "",
             "response_time": "",
             "relevance": "",

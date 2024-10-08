@@ -24,13 +24,13 @@ services:
       - ${OLLAMA_MODELS}:/root/.ollama/
     ports:
       - "11434:11434"
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: all
-#              capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD-SHELL", "curl -f ${OLLAMA_URL} || exit 1"]
       interval: 30s
@@ -81,5 +81,18 @@ services:
       postgres:
         condition: service_started
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
+  grafana_data:

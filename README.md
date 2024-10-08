@@ -72,7 +72,7 @@ Not tested, but you should be able to run the commands used for Linux.
 git clone https://github.com/dmitrykosintsev/dtc-maths-helper
 ~~~
 2. Edit .env.template to include your OpenAI API Key (if you want to run the bot using ChatGPT). Rename the file to .env
-3. Create the following directories: ./data/postgres_data and ./.elasticsearch/data/
+3. Create the following directories: ./data/postgres_data, ./data/grafana_data and ./.elasticsearch/data/
 4. Run docker-compose build
 5. Download models. You can get them all or pick one:
 * deepseek-math-7b-rl:
