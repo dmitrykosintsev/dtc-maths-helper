@@ -129,7 +129,12 @@ docker-compose up -d
 2. Look for the output from Streamlit to find the access link for the application.
 
 ### Interface
+Chatbot:
 [streamlit-app-2024-10-08-00-10-98.webm](https://github.com/user-attachments/assets/76a39a76-05f6-417c-bf17-01f4829236f8)
+
+Monitoring dashboard:
+![Grafana](https://github.com/user-attachments/assets/e7dae241-6603-40e4-8dea-5f93e83c914b)
+
 
 ### Using NVidia GPUs:
 Uncomment the following lines in docker-compose.yaml if you have a dedicated NVidia GPU and want to use it for Ollama:
