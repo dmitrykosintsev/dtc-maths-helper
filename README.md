@@ -151,10 +151,47 @@ Uncomment the following lines in docker-compose.yaml if you have a dedicated NVi
 ## Evaluations
 
 ### Retrieval evaluation
+No conducted. Hybrid search is used out of the box:
+~~~python
+def elastic_search(query, vector, index_name = "math_problems", top_k=10):
+    search_query = {
+        "size": 10,
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            "question": query  # Search the question field for the text query
+                        }
+                    }
+                ],
+                "should": [
+                    {
+                        "script_score": {
+                            "query": {"match_all": {}},  # A match_all query to combine with vector search
+                            "script": {
+                                "source": """
+                                        cosineSimilarity(params.query_vector, 'question_vector') + 1.0
+                                    """,
+                                "params": {
+                                    "query_vector": vector  # Vector representation of the query
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+    #print("Search Query:", search_query)
+    es = Elasticsearch(os.getenv('ELASTIC_URL'))
+    response = es.search(index=index_name, body=search_query)
+    return response['hits']['hits']
+~~~
 
 ### RAG evaluation
 The following part of rag.py is responsible for LLM-as-a-judge evaluation:
-~~~
+~~~python
 # Prompt for LLM-as-a-judge evaluation
 def evaluation_function(feedback, question, student_answer):
     eval_prompt_template = """
