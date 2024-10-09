@@ -43,21 +43,21 @@ The installation script is simple and is not guaranteed to run properly if the f
 ~~~
 git clone https://github.com/dmitrykosintsev/dtc-maths-helper
 ~~~
-2. Edit .env.template to include your OpenAI API Key (if you want to run the bot using ChatGPT)
-3. Follow the steps specific for your machine
+2. Edit .env.template to include your OpenAI API Key. By default, evaluation is done using GPT-4o-mini, though you can use any other model.
+3. Follow the steps below
 
 ### Linux
-1. Give executable permissions to the install.sh script. This script runs all steps for you. Run the command from the directory where the script is located:
+4. Give executable permissions to the install.sh script. This script runs all the steps for you. Run the command from the directory where the script is located:
 ~~~
 chmod +x install.sh
 ~~~
-2. Run the script and relax:
+5. Run the script and relax:
 ~~~
 ./install.sh
 ~~~
-3. After the script finishes with a success message, go to the section Running application
+6. After the script finishes with a success message, go to the section Running application
 
-4. If you do not wish to run unknown scripts from unknown sources (which means you are awesome!), you can simply go through the script step-by-step
+7. If you do not wish to run unknown scripts from unknown sources (which means you are awesome!), you can simply go through the script step-by-step
 
 ### Windows
 If you know how to run WSL, you should be able to install and run the app using the subsection for Linux.
@@ -104,7 +104,7 @@ Then, run:
 ~~~
 ollama create <modelname>
 ~~~
-Without leaving bash terminal, you can check that the model are imported by using the following command:
+Without leaving the bash terminal, you can check that the model is imported by using the following command:
 ~~~
 ollama list
 ~~~~
@@ -151,7 +151,7 @@ Uncomment the following lines in docker-compose.yaml if you have a dedicated NVi
 ## Evaluations
 
 ### Retrieval evaluation
-No conducted. Hybrid search is used out of the box:
+Not conducted. Hybrid search is used out of the box:
 ~~~python
 def elastic_search(query, vector, index_name = "math_problems", top_k=10):
     search_query = {
