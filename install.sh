@@ -26,23 +26,12 @@ else
 fi
 
 # Step 3: Download models from Huggingface and create Modelfiles
-# You can download only one model. In this case, comment the models you do not need
+# You can comment some of the models to avoid downloading them all
 declare -A model_files
-# Each model points to an array of file URLs for that model
-model_files["deepseek-math-7b-rl"]=(
-    "https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/blob/main/model-00001-of-000002.safetensors"
-    "https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/blob/main/model-00002-of-000002.safetensors"
-)
-model_files["Qwen2-Math-7B-Instruct"]=(
-    "https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00001-of-00004.safetensors"
-    "https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00002-of-00004.safetensors"
-    "https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00003-of-00004.safetensors"
-    "https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/blob/main/model-00004-of-00004.safetensors"
-)
-model_files["MathCoder-CL-7B"]=(
-    "https://huggingface.co/MathLLMs/MathCoder-CL-7B/blob/main/model-00001-of-00002.safetensors"
-    "https://huggingface.co/MathLLMs/MathCoder-CL-7B/blob/main/model-00002-of-00002.safetensors"
-)
+# Each model points to a space-separated list of file URLs for that model
+model_files["deepseek-math-7b-rl"]="https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/resolve/main/model-00001-of-000002.safetensors https://huggingface.co/deepseek-ai/deepseek-math-7b-rl/resolve/main/model-00002-of-000002.safetensors"
+model_files["Qwen2-Math-7B-Instruct"]="https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/resolve/main/model-00001-of-00004.safetensors https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/resolve/main/model-00002-of-00004.safetensors https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/resolve/main/model-00003-of-00004.safetensors https://huggingface.co/Qwen/Qwen2-Math-7B-Instruct/resolve/main/model-00004-of-00004.safetensors"
+model_files["MathCoder-CL-7B"]="https://huggingface.co/MathLLMs/MathCoder-CL-7B/resolve/main/model-00001-of-00002.safetensors https://huggingface.co/MathLLMs/MathCoder-CL-7B/resolve/main/model-00002-of-00002.safetensors"
 
 for model in "${!model_files[@]}"; do
     model_dir="./ollama/models/$model"
@@ -51,8 +40,11 @@ for model in "${!model_files[@]}"; do
     echo "Downloading files for $model..."
     modelfile_content=""
 
+    # Split the space-separated URLs into an array
+    files=(${model_files[$model]})
+
     # Loop through each safetensor file for the current model
-    for file_url in "${model_files[$model][@]}"; do
+    for file_url in "${files[@]}"; do
         file_name=$(basename "$file_url")  # Extract file name from URL
         curl -L "$file_url" -o "$model_dir/$file_name"
         if [ $? -ne 0 ]; then
